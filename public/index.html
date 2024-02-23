@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sonora / WeCitio - Masai del Sprint</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Sonora / WeCitio - Masai del Sprint</h1>    
+    <div id="loginContainer" style="display: none;">
+        <h2>¿Quién va a votar?</h2>
+        <form id="loginForm">
+            <!-- <label for="username">Usuario:</label>
+            <input type="text" id="username" required><br> -->
+            <label for="email">Email:</label>
+            <input type="email" id="email" required><br>
+            <button type="submit">Acceder</button>
+        </form>
+    </div>
+    
+    <div id="userHeader" class="container" style="display: none;">
+        <button id="logoutButton">Salir</button><h2>Bienvenid@ <span id="loggedInUsername"></span></h2>
+    </div>
+
+    <div id="mainContent" style="display: none;" class="container">
+        <h2>Tus votos</h2>
+        <div class="table-container">
+            <table id="userTable">
+                <thead>
+                    <tr>
+                        <th>Puesto</th>
+                        <th>Nombre</th>
+                        <th>Voto</th>
+                    </tr>
+                </thead>
+                <tbody id="userList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
