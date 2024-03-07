@@ -60,6 +60,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const deleteVotesButton = document.getElementById('deleteVotesButton');
 
+    let votesData = {
+        labels: [],
+        data: [],
+        backgroundColors: []
+    };
+
+    const masaiList = [];
+
     deleteVotesButton.addEventListener('click', () => {
         const confirmation = confirm('¿Estás seguro de que quieres eliminar todas las votaciones?');
 
@@ -116,8 +124,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                     const votesReceived = votingCount[user.name] || 0;
                     const li = document.createElement('li');
                     li.textContent = `${user.name}: ${votesReceived} votos`;
+
+                    votesData.labels.push(user.name);
+                    votesData.data.push(votesReceived);
+                    votesData.backgroundColors.push(generateRandomColor());
+
                     if (maxVotesUser.indexOf(user.name) > -1) {
                         li.classList.add('most-voted'); // Agregar clase de estilo para resaltar
+                        masaiList.push(user.name);
                     }
                     votingResultsElement.appendChild(li);
                 });
@@ -130,6 +144,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Error al cargar los resultados de votaciones:', error);
     }
+
+    masaiList.forEach(masai => {
+        const liItem = document.createElement("li");
+
+        const masaiIcon = document.createElement("img");
+        masaiIcon.src = "resources/masai.png";
+
+        const masaiName = document.createElement('span');
+        masaiName.textContent = masai;
+
+        liItem.appendChild(masaiIcon);
+        liItem.appendChild(masaiName);
+
+
+        document.querySelector("#masainame").appendChild(liItem);
+    });
+
+
+    populateChart(votesData);
 });
 
 async function getBackendAddress() {
@@ -164,4 +197,47 @@ async function deleteAllVotes() {
         console.error('Error al eliminar votaciones:', error);
         alert('Hubo un error al eliminar las votaciones');
     }
+}
+
+function populateChart(votesData) {
+    const ctx = document.getElementById('votesChart');
+
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: votesData.labels,
+        datasets: [{
+          label: 'Total de votos',
+          data: votesData.data,
+          backgroundColor: [
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(255, 159, 64, 0.8)',
+            'rgba(255, 205, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(153, 102, 255, 0.8)',
+            'rgba(201, 203, 207, 0.8)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+}
+
+function generateRandomColor() {
+    var red = Math.floor(Math.random() * 256);
+    var green = Math.floor(Math.random() * 256);
+    var blue = Math.floor(Math.random() * 256);
+    var alpha = Math.random().toFixed(1); // Transparency value between 0 and 1
+
+    var randomColor = 'rgba(' + red + ',' + green + ',' + blue + ',' + alpha + ')';
+    
+    return randomColor;
 }

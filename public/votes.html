@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Resultados de Votaciones</title>
@@ -11,14 +12,21 @@
     <div class="container">
         <h2 id="votingMode">Resultados de Votaciones</h2>
     </div>
-    <div class="container">
-        
+    <div class="container" >
+        <ul id="masainame" class="masai-list"></ul>    
+    </div>    
+    <div class="container">        
+        <canvas id="votesChart"></canvas>
+    </div>    
+    <div class="container">        
         <ul id="votingResults"></ul>        
     </div>
     <div class="container" id="buttonBar">
         <button id="deleteVotesButton">Reiniciar votación</button>
         <div id="limits"></div>
     </div>
+
+    
     <script src="votes.js"></script>
 </body>
 </html>

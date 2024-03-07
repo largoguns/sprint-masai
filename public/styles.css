@@ -163,3 +163,25 @@ li p {
     font-size: 16px;
     color: #333;
 }
+
+
+.masai-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.masai-list li {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+}
+
+.masai-list li img {
+    width: 40px; /* Ajusta el tamaño según tus necesidades */
+    height: auto; /* Para mantener la proporción */
+    margin-right: 10px;
+}
+
+.masai-list li span {
+    font-size: 30px; /* Tamaño del texto */
+}
