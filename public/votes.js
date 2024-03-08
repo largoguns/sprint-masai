@@ -68,6 +68,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const masaiList = [];
 
+    const selfVotes = [];
+
     deleteVotesButton.addEventListener('click', () => {
         const confirmation = confirm('¿Estás seguro de que quieres eliminar todas las votaciones?');
 
@@ -90,6 +92,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     votingCount[targetUserId]++;
                 } else {
                     votingCount[targetUserId] = 1;
+                }
+
+                if (vote.targetUserId === vote.voterId) {
+                    selfVotes.push(vote.voterId);
                 }
             });
 
@@ -134,6 +140,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         masaiList.push(user.name);
                     }
                     votingResultsElement.appendChild(li);
+                });
+
+                selfVotes.forEach(user => {                    
+                    const selfVote = document.createElement('li');
+                    selfVote.textContent = `${user}`;
+                    document.querySelector("#selfvote").appendChild(selfVote);
                 });
             } else {
                 console.error('Error al obtener la lista de usuarios:', users.error);
