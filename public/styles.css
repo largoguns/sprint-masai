@@ -57,6 +57,23 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+.headButtons {
+    display: flex;
+    gap: 10px;
+}
+
+.headButtons a {
+    text-decoration: none;
+    padding: 8px 12px;
+    border: none;
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+    font-size: 14px;
+}
+
 h1 {
     text-align: center;
     margin-bottom: 20px;
@@ -172,7 +189,6 @@ li p {
 
 .masai-list li {
     margin-bottom: 10px;
-    display: flex;
     align-items: center;
 }
 
@@ -182,6 +198,72 @@ li p {
     margin-right: 10px;
 }
 
-.masai-list li span {
-    font-size: 30px; /* Tamaño del texto */
+.userTeam {
+    cursor: pointer;
+    float: right;
+    font-size: 16px;
+}
+
+.popup {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+
+.popup-contenido {
+    border-radius: 10px;
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 25%;
+}
+
+.popup-contenido ul li {
+    cursor: pointer;
+}
+
+.cerrar {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.cerrar:hover,
+.cerrar:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.deleteTeam {
+    float: right;
+    cursor: pointer;
+}
+
+#masainame li span {
+    font-size: 30px;
+}
+
+
+#teamVotes ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#teamVotes li {
+    display: table;
+    width: 98%;
+}
+
+#teamVotes span {
+    display: table-cell;
 }

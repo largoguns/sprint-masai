@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados de Votaciones</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>Sonora / WeCitio - Masai del Sprint</h1>
+    <div class="container">
+        <div class="headButtons">
+            <a href="/admin.html">Configuración</a>
+            <a href="/users.html">Gestión de masáis</a>
+            <a href="/teams.html">Gestión de equipos</a>
+            <a href="/votes.html">Votos del sprint</a>
+        </div>        
+    </div>   
+    <div class="container" >
+        <h2>Gestión de Masais</h2>
+    </div>
+    <div class="container" >
+        <ul id="masailist" class="masai-list"></ul>    
+    </div>
+
+    <div id="teamPopup" class="popup">
+        <div class="popup-contenido">
+            <span onclick="cerrarPopup()" class="cerrar">&times;</span>
+            <p>Selecciona un equipo</p>
+            <ul id="teamSelectList">
+            </ul>
+        </div>
+    </div>    
+    
+    <script src="users.js"></script>
+</body>
+</html>

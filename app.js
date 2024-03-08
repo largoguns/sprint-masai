@@ -10,6 +10,7 @@ var os = require("os");
 const userRoutes = require("./userRoutes");
 const voteRoutes = require("./voteRoutes");
 const configRoutes = require("./configRoutes");
+const teamsRoutes = require("./teamsRoutes");
 
 
 const app = express();
@@ -90,6 +91,15 @@ app.use(
     },
     configRoutes
   );
+
+  app.use(
+    "/api/teams",
+    (req, res, next) => {
+      req.endpoint = endpoint;
+      next();
+    },
+    teamsRoutes
+  );  
 
 app.get("/endpoint.config", (req, res) => {
   // Leer el archivo de configuración y enviarlo como respuesta

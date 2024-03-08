@@ -46,6 +46,38 @@ router.get('/:name', (req, res) => {
     });
 });
 
+router.get('/team/:name', (req, res) => {
+    const teamName = req.params.name;
+
+    db.find({ team: teamName }, (err, users) => {
+        if (err) {
+            res.status(500).json({ error: err });
+        } else {
+            if (users.length === 0) {
+                res.status(404).json({ error: 'Usuario no encontrado' });
+            } else {
+                res.json(users);
+            }
+        }
+    });
+});
+
+router.delete('/team/:name', (req, res) => {
+    const teamId = req.params.name;
+
+    db.update({ team: teamId }, { $set: { team: "" }}, { multi: true }, (err, users) => {
+        if (err) {
+            res.status(500).json({ error: err });
+        } else {
+            if (users.length === 0) {
+                res.status(404).json({ error: 'Usuario no encontrado' });
+            } else {
+                res.json(users);
+            }
+        }
+    });
+});
+
 router.post('/', (req, res) => {
     const newUser = req.body;
     

@@ -29,7 +29,7 @@ async function updateConfig(value) {
 
 async function addLimitConfigButton() {
     const limitContainer = document.getElementById("limits");
-    const votingMode = document.getElementById("votingMode");
+    
     const responseConfig = await fetch(`${APIEndpoint}/config/votingLimit`);
     const newButton = document.createElement("button");
 
@@ -37,13 +37,13 @@ async function addLimitConfigButton() {
 
     if (config.votingLimit == -1) {
         newButton.innerText = "Voto único";
-        votingMode.innerText = "Resultados de Votaciones - Voto libre";
+        
         newButton.addEventListener('click', async function() {
             await updateConfig(1);
         });
     } else {
         newButton.innerText = "Voto libre";
-        votingMode.innerText = "Resultados de Votaciones - Voto único";
+        
         newButton.addEventListener('click', async function() {
             await updateConfig(-1);
         });        
@@ -118,123 +118,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     APIEndpoint = await getBackendAddress();
     teamListData = await getTeams();
     
-    const votingResultsElement = document.getElementById('votingResults');
+    await addLimitConfigButton();
 
-    
-    let votesData = {
-        labels: [],
-        data: [],
-        backgroundColors: []
-    };
-    
-    const masaiList = [];
-    
-    const selfVotes = [];
-    
-    try {
-        const response = await fetch(`${APIEndpoint}/votes/`);
-        const votes = await response.json();
+    const deleteVotesButton = document.getElementById('deleteVotesButton');
 
-        if (response.ok) {
-            // Obtener información de los usuarios
-            const usersResponse = await fetch(`${APIEndpoint}/users/`);
-            const users = await usersResponse.json();
+    deleteVotesButton.addEventListener('click', () => {
+        const confirmation = confirm('¿Estás seguro de que quieres eliminar todas las votaciones?');
 
-            const votingCount = {};
-
-            // Contar los votos para cada usuario
-            votes.forEach(vote => {
-                const targetUserId = vote.targetUserId;
-                if (votingCount[targetUserId]) {
-                    votingCount[targetUserId]++;
-                } else {
-                    votingCount[targetUserId] = 1;
-                }
-
-                if (vote.targetUserId === vote.voterId) {
-                    selfVotes.push(vote.voterId);
-                }
-
-                if (getUserTeam(users, vote.voterId) == getUserTeam(users, vote.targetUserId)) {
-                    addTeamVote(getUserTeam(users, vote.targetUserId), "in");
-                } else {
-                    addTeamVote(getUserTeam(users, vote.targetUserId), "out");
-                }
-            });
-
-            let sortedVotes = [];
-            for (var vote in votingCount) {
-                sortedVotes.push({name: vote, votes: votingCount[vote]});
-            }
-            
-            sortedVotes.sort(function(a, b) {
-                return b.votes - a.votes;
-            });            
-
-            if (usersResponse.ok) {
-                // Encontrar al usuario más votado
-                let maxVotesUser = [];
-                let maxVotes = 0;
-
-                sortedVotes.forEach(userVoted => {
-                    const votesReceived = userVoted.votes;
-                    if (votesReceived >= maxVotes) {
-                        maxVotes = votesReceived;
-                        maxVotesUser.push(userVoted.name);
-                    }
-                });
-
-                // Mostrar los resultados de las votaciones
-                sortedVotes.forEach(user => {
-                    const votesReceived = votingCount[user.name] || 0;
-                    const li = document.createElement('li');
-                    li.textContent = `${user.name}: ${votesReceived} votos`;
-
-                    votesData.labels.push(user.name);
-                    votesData.data.push(votesReceived);
-                    votesData.backgroundColors.push(generateRandomColor());
-
-                    if (maxVotesUser.indexOf(user.name) > -1) {
-                        li.classList.add('most-voted'); // Agregar clase de estilo para resaltar
-                        masaiList.push(user.name);
-                    }
-                    votingResultsElement.appendChild(li);
-                });
-
-                selfVotes.forEach(user => {                    
-                    const selfVote = document.createElement('li');
-                    selfVote.textContent = `${user}`;
-                    document.querySelector("#selfvote").appendChild(selfVote);
-                });
-            } else {
-                console.error('Error al obtener la lista de usuarios:', users.error);
-            }
-        } else {
-            console.error('Error al obtener los votos:', votes.error);
+        if (confirmation) {
+            deleteAllVotes();
         }
-    } catch (error) {
-        console.error('Error al cargar los resultados de votaciones:', error);
-    }
-
-    masaiList.forEach(masai => {
-        const liItem = document.createElement("li");
-
-        const masaiIcon = document.createElement("img");
-        masaiIcon.src = "resources/masai.png";
-
-        const masaiName = document.createElement('span');
-        masaiName.textContent = masai;
-
-        liItem.appendChild(masaiIcon);
-        liItem.appendChild(masaiName);
-
-
-        document.querySelector("#masainame").appendChild(liItem);
-    });
-
-    showTeamVotes();
-
-    populateChart(votesData);
+    });    
 });
 
 async function getBackendAddress() {
