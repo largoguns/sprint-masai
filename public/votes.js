@@ -140,34 +140,36 @@ document.addEventListener('DOMContentLoaded', async () => {
             const usersResponse = await fetch(`${APIEndpoint}/users/`);
             const users = await usersResponse.json();
 
-            const votingCount = {};
+            const votingCount = [];
 
             // Contar los votos para cada usuario
             votes.forEach(vote => {
+                
                 const targetUserId = vote.targetUserId;
-                if (votingCount[targetUserId]) {
-                    votingCount[targetUserId]++;
-                } else {
-                    votingCount[targetUserId] = 1;
+
+                if (votingCount.find((user) => user.name == targetUserId) == null) {
+                    votingCount.push({name: targetUserId, votesIn: 0, votesOut: 0, votes: 0, selfVotes: 0, comments: []});
                 }
 
                 if (vote.targetUserId === vote.voterId) {
-                    selfVotes.push(vote.voterId);
+                    votingCount.find((user) => user.name == targetUserId).selfVotes++;
                 }
 
                 if (getUserTeam(users, vote.voterId) == getUserTeam(users, vote.targetUserId)) {
                     addTeamVote(getUserTeam(users, vote.targetUserId), "in");
+                    votingCount.find((user) => user.name == targetUserId).votesIn++;
                 } else {
                     addTeamVote(getUserTeam(users, vote.targetUserId), "out");
+                    votingCount.find((user) => user.name == targetUserId).votesOut++;
+                }
+
+                votingCount.find((user) => user.name == targetUserId).votes++;
+                if (vote.comment != null) {
+                    votingCount.find((user) => user.name == targetUserId).comments.push(vote.comment);
                 }
             });
 
-            let sortedVotes = [];
-            for (var vote in votingCount) {
-                sortedVotes.push({name: vote, votes: votingCount[vote]});
-            }
-            
-            sortedVotes.sort(function(a, b) {
+            votingCount.sort(function(a, b) {
                 return b.votes - a.votes;
             });            
 
@@ -176,7 +178,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 let maxVotesUser = [];
                 let maxVotes = 0;
 
-                sortedVotes.forEach(userVoted => {
+                votingCount.forEach(userVoted => {
                     const votesReceived = userVoted.votes;
                     if (votesReceived >= maxVotes) {
                         maxVotes = votesReceived;
@@ -185,27 +187,43 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
 
                 // Mostrar los resultados de las votaciones
-                sortedVotes.forEach(user => {
-                    const votesReceived = votingCount[user.name] || 0;
-                    const li = document.createElement('li');
-                    li.textContent = `${user.name}: ${votesReceived} votos`;
+                votingCount.forEach(user => {
+                    const votesReceived = user.votes || 0;
+                    
+                    const tr = document.createElement('tr');
+                    const td1 = document.createElement('td');
+                    td1.textContent = `${user.name}`;
+
+                    const td2 = document.createElement('td');
+                    td2.textContent = `${votesReceived}`;
+
+                    const td3 = document.createElement('td');
+                    td3.textContent = `${user.votesIn}`;
+                    
+                    const td4 = document.createElement('td');
+                    td4.textContent = `${user.votesOut}`;    
+                    
+                    const td5 = document.createElement('td');
+                    td5.textContent = user.selfVotes == 1 ? "✌️" : "";
+
+                    tr.appendChild(td1);
+                    tr.appendChild(td2);
+                    tr.appendChild(td3);
+                    tr.appendChild(td4);
+                    tr.appendChild(td5);
 
                     votesData.labels.push(user.name);
                     votesData.data.push(votesReceived);
                     votesData.backgroundColors.push(generateRandomColor());
 
                     if (maxVotesUser.indexOf(user.name) > -1) {
-                        li.classList.add('most-voted'); // Agregar clase de estilo para resaltar
-                        masaiList.push(user.name);
+                        tr.classList.add('most-voted'); // Agregar clase de estilo para resaltar
+                        masaiList.push({ name: user.name, comments: user.comments });
                     }
-                    votingResultsElement.appendChild(li);
+                    votingResultsElement.appendChild(tr);
                 });
 
-                selfVotes.forEach(user => {                    
-                    const selfVote = document.createElement('li');
-                    selfVote.textContent = `${user}`;
-                    document.querySelector("#selfvote").appendChild(selfVote);
-                });
+
             } else {
                 console.error('Error al obtener la lista de usuarios:', users.error);
             }
@@ -223,19 +241,60 @@ document.addEventListener('DOMContentLoaded', async () => {
         masaiIcon.src = "resources/masai.png";
 
         const masaiName = document.createElement('span');
-        masaiName.textContent = masai;
+        masaiName.textContent = masai.name;
+
+        const marquee = document.createElement('div');
+        marquee.className = "marquee";
+
+        const marqueeContent = document.createElement('div');
+        marqueeContent.className = "marquee-content";        
+
+        const userComments = masai.comments.reduce((comments, comment) => {
+            const foundComment = comments.find((objeto) => {
+                return objeto.comment === comment;
+            });
+        
+            if (foundComment) {
+                foundComment.count++;
+            } else {
+                comments.push({ comment: comment, count: 1 });
+            }
+        
+            return comments;
+        }, []);
+
+        userComments.forEach(comment => {
+            const tagComment = document.createElement("span");
+            tagComment.innerText = comment.comment;
+            tagComment.style.fontSize = `${comment.count * 10}px`;
+            tagComment.title = `${comment.count} ${comment.count > 1 ? "veces": "vez"}`;
+            marqueeContent.appendChild(tagComment);
+        });
+
+        marquee.appendChild(marqueeContent);
 
         liItem.appendChild(masaiIcon);
         liItem.appendChild(masaiName);
+        liItem.appendChild(marquee);
 
 
         document.querySelector("#masainame").appendChild(liItem);
     });
 
+    //showSelfVotes(selfVotes);
+
     showTeamVotes();
 
     populateChart(votesData);
 });
+
+function showSelfVotes(selfVotes) {
+    selfVotes.forEach(user => {                    
+        const selfVote = document.createElement('li');
+        selfVote.textContent = `${user}`;
+        document.querySelector("#selfvote").appendChild(selfVote);
+    });
+}
 
 async function getBackendAddress() {
     // Hacer una solicitud para obtener la configuración del endpoint
@@ -313,3 +372,4 @@ function generateRandomColor() {
     
     return randomColor;
 }
+

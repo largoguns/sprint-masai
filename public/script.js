@@ -88,7 +88,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('loginContainer').style.display = 'block';
     }
 
+    document.querySelector("#voteForUser").addEventListener("click", async () => {
+        var votingUser = document.querySelector("#votingUser").innerText;
+        var votingComment = document.querySelector("#votingComment").options[document.querySelector("#votingComment").selectedIndex].textContent;
+        document.querySelector("#votingComment").selectedIndex = 0;
 
+        await voteForUser(votingUser, votingComment);
+    });
 });
 
 // Función para mostrar la lista de usuarios en la tabla
@@ -113,8 +119,9 @@ function displayUserList(users) {
             try {
                 if (user.voteId) {
                     deleteVote(user.voteId);
-                } else {
-                    voteForUser(user.name);
+                } else {                    
+                    document.querySelector("#votingUser").innerText = user.name;
+                    document.querySelector("#voteDialog").showModal();
                 }
             } catch (error) {
                 console.error('Error al votar o eliminar voto:', error);
@@ -159,7 +166,7 @@ document.getElementById('logoutButton').addEventListener('click', function() {
 });
 
 // Función para votar por un usuario
-async function voteForUser(targetUserId) {
+async function voteForUser(targetUserId, comment) {
     try {
         const user = JSON.parse(localStorage.getItem('MasaisData'));
         const voterId = user.name;
@@ -169,7 +176,7 @@ async function voteForUser(targetUserId) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ voterId, targetUserId })
+            body: JSON.stringify({ voterId, targetUserId, comment })
         });
 
         if (response.ok) {
