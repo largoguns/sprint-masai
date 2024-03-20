@@ -3,7 +3,7 @@ const router = express.Router();
 const Datastore = require('nedb');
 const fetch = require('node-fetch');
 
-const db = new Datastore({ filename: './data/votes.db', autoload: true });
+const db = new Datastore({ filename: 'data/votes.db', autoload: true });
 
 router.get('/', (req, res) => {
     db.find({}, (err, votes) => {

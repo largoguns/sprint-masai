@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Datastore = require('nedb');
 
-const db = new Datastore({ filename: './data/teams.db', autoload: true });
+const db = new Datastore({ filename: 'data/teams.db', autoload: true });
 
 router.get('/', (req, res) => {
     db.find({}).sort({ job:1, name: 1 }).exec((err, teams) => {

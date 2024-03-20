@@ -4,7 +4,7 @@ const Datastore = require('nedb');
 const axios = require('axios');
 
 // Crear la base de datos NeDB
-const db = new Datastore({ filename: './data/config.db', autoload: true });
+const db = new Datastore({ filename: 'data/config.db', autoload: true });
 
 // Verificar y añadir valor por defecto al arrancar
 db.find({}, (err, docs) => {
