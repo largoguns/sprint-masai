@@ -14,43 +14,17 @@ const teamsRoutes = require("./teamsRoutes");
 
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 var endpointConfig = "test2";
 
-// Middleware para parsear JSON en las solicitudes
 app.use(bodyParser.json());
 
 app.use(express.static("public"));
 
-// Configuración de la base de datos NeDB
-// const db = new Datastore({ filename: "users.db", autoload: true });
-
-// Middleware para manejar datos JSON
 app.use(cors());
 app.use(express.json());
 
-// const initialUsers = [
-//   { name: "Usuario 1", email: "usuario1@example.com" },
-//   { name: "Usuario 2", email: "usuario2@example.com" },
-//   { name: "Usuario 3", email: "usuario3@example.com" },
-// ];
-
-// db.find({}, (err, users) => {
-//   if (err) {
-//     console.error("Error al buscar usuarios:", err);
-//   } else if (users.length === 0) {
-//     db.insert(initialUsers, (err, newUsers) => {
-//       if (err) {
-//         console.error("Error al insertar usuarios iniciales:", err);
-//       } else {
-//         console.log("Usuarios iniciales insertados correctamente:", newUsers);
-//       }
-//     });
-//   } else {
-//     console.log("Se encontraron usuarios existentes:", users);
-//   }
-// });
 
 let ipAddress = "";
 const interfaces = os.networkInterfaces();
