@@ -41,9 +41,9 @@ Object.keys(interfaces).forEach((key) => {
 const endpoint = `http://localhost:${port}`; // URL del endpoint
 console.log("HOLA QUE TAL!");
 //const endpoint = "https://sprint-masai.onrender.com";
-endpointConfig = { endpoint };
+//endpointConfig = { endpoint };
 
-fs.writeFileSync("endpoint.config", JSON.stringify(endpointConfig));
+//fs.writeFileSync("./endpoint.config", JSON.stringify(endpointConfig));
 
 // Usa las rutas de la API de votos
 app.use("/api/users", userRoutes);
