@@ -64,8 +64,9 @@ Object.keys(interfaces).forEach((key) => {
 });
 
 //const endpoint = `http://${ipAddress}:${port}`; // URL del endpoint
+const endpoint = `http://localhost:${port}`; // URL del endpoint
 console.log("HOLA QUE TAL!");
-const endpoint = "https://sprint-masai.onrender.com";
+//const endpoint = "https://sprint-masai.onrender.com";
 endpointConfig = { endpoint };
 
 fs.writeFileSync("endpoint.config", JSON.stringify(endpointConfig));
@@ -112,11 +113,11 @@ app.get("/endpoint.config", (req, res) => {
   });
 });
 
-// app.listen(port, () => {
-//   console.log(`Servidor Masáis corriendo en ${port}`);
-// });
-
-
-app.listen(process.env.PORT, () => {
-    console.log(`Servidor Masáis corriendo en ${endpoint}`);
+app.listen(port, () => {
+  console.log(`Servidor Masáis corriendo en ${port}`);
 });
+
+
+// app.listen(process.env.PORT, () => {
+//     console.log(`Servidor Masáis corriendo en ${endpoint}`);
+// });

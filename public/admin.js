@@ -131,21 +131,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });    
 });
 
-async function getBackendAddress() {
-    // Hacer una solicitud para obtener la configuración del endpoint
-    return fetch('/endpoint.config')
-    .then(response => response.json())
-    .then(data => {
-        // Configurar una variable global con la URL del endpoint
-        return `${data.endpoint}/api`;
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        return null;
-    });
-}
-
-
 async function deleteAllVotes() {
     try {
         const response = await fetch(`${APIEndpoint}/votes/all`, {

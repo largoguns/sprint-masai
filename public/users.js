@@ -114,20 +114,6 @@ function getTeamName(teams, id) {
     }
 }
 
-async function getBackendAddress() {
-    // Hacer una solicitud para obtener la configuración del endpoint
-    return fetch('/endpoint.config')
-    .then(response => response.json())
-    .then(data => {
-        // Configurar una variable global con la URL del endpoint
-        return `${data.endpoint}/api`;
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        return null;
-    });
-}
-
 function mostrarPopup(user) {
     var teamSelectList = document.querySelector("#teamSelectList");
     teamSelectList.attributes["userId"] = user;
