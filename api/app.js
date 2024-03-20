@@ -7,10 +7,10 @@ const fs = require("fs");
 const cors = require("cors");
 var os = require("os");
 
-const userRoutes = require("./userRoutes");
-const voteRoutes = require("./voteRoutes");
+const userRoutes = require("../userRoutes");
+const voteRoutes = require("../voteRoutes");
 const configRoutes = require("./configRoutes");
-const teamsRoutes = require("./teamsRoutes");
+const teamsRoutes = require("../teamsRoutes");
 
 
 const app = express();
