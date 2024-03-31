@@ -1,6 +1,5 @@
-var APIEndpoint = "";
-
 document.addEventListener('DOMContentLoaded', async () => {
+    await getHeader();
     const addNewTeam = document.getElementById('addNewTeam');
 
     addNewTeam.addEventListener('click', async () => {
@@ -47,7 +46,7 @@ async function loadTeamData() {
                 actionButton.className = "deleteTeam";
 
                 actionButton.addEventListener('click', async function() {
-                    deleteTeam(team._id);
+                    deleteComment(team._id);
                 });                
 
                 li.appendChild(actionButton);
@@ -95,7 +94,7 @@ async function setUserTeam(valor) {
 
 }
 
-async function deleteTeam(teamId) {
+async function deleteComment(teamId) {
 
     const confirmation = confirm('Eliminar un grupo eliminará la asignación de dicho grupo a sus usuarios. Tendrá que volver a asociar los usuarios a un grupo. ¿Quieres continuar?');
 

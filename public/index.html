@@ -17,16 +17,15 @@
         </form>
     </div>
     
-    <div id="userHeader" class="container" style="display: none;">
-        <button id="logoutButton">Salir</button><h2>Bienvenid@ <span id="loggedInUsername"></span></h2>
-    </div>
-
+    
     <div id="mainContent" style="display: none;" class="container">
+        <div id="header"></div>
         <h2>Tus votos</h2>
         <div class="table-container">
             <table id="userTable">
                 <thead>
                     <tr>
+                        <th>Equipo</th>
                         <th>Puesto</th>
                         <th>Nombre</th>
                         <th>Voto</th>
@@ -42,7 +41,7 @@
         <p>¿Quieres indicar alguna palabra que mejor describa el porque quieres votarlo?</p>
         <select id="votingComment">
             <option value=""></option>
-            <option value="colaborador">Colaborador</option>
+            <!-- <option value="colaborador">Colaborador</option>
             <option value="cooperativo">Cooperativo</option>
             <option value="solidario">Solidario</option>
             <option value="integrante">Integrante</option>
@@ -61,7 +60,7 @@
             <option value="sociable">Sociable</option>
             <option value="unido">Unido</option>
             <option value="activo">Activo</option>
-            <option value="leal">Leal</option>
+            <option value="leal">Leal</option> -->
         </select>
         <form method="dialog">
             <button>Cancelar</button>

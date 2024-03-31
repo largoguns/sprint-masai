@@ -7,10 +7,11 @@ const fs = require("fs");
 const cors = require("cors");
 var os = require("os");
 
-const userRoutes = require("./userRoutes");
-const voteRoutes = require("./voteRoutes");
-const configRoutes = require("./configRoutes");
-const teamsRoutes = require("./teamsRoutes");
+const userRoutes = require("./routes/userRoutes");
+const voteRoutes = require("./routes/voteRoutes");
+const configRoutes = require("./routes/configRoutes");
+const teamsRoutes = require("./routes/teamsRoutes");
+const commentsRoutes = require("./routes/commentsRoutes");
 
 
 const app = express();
@@ -67,13 +68,22 @@ app.use(
     configRoutes
   );
 
-  app.use(
+app.use(
     "/api/teams",
     (req, res, next) => {
       req.endpoint = endpoint;
       next();
     },
     teamsRoutes
+  );  
+
+app.use(
+    "/api/comments",
+    (req, res, next) => {
+      req.endpoint = endpoint;
+      next();
+    },
+    commentsRoutes
   );  
 
 app.get("/endpoint.config", (req, res) => {

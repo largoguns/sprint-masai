@@ -1,5 +1,3 @@
-var APIEndpoint = "";
-
 var teamListData;
 
 async function updateConfig(value) {
@@ -27,7 +25,7 @@ async function updateConfig(value) {
     }
 }
 
-async function addLimitConfigButton() {
+async function addConfigButtons() {
     const limitContainer = document.getElementById("limits");
     const votingMode = document.getElementById("votingMode");
     const responseConfig = await fetch(`${APIEndpoint}/config/votingLimit`);
@@ -114,178 +112,213 @@ function showTeamVotes() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    APIEndpoint = await getBackendAddress();
-    teamListData = await getTeams();
-    
-    const votingResultsElement = document.getElementById('votingResults');
+async function canOpenVotesPage() {
+    const user = JSON.parse(localStorage.getItem('MasaisData'));
+    const responseConfig = await fetch(`${APIEndpoint}/config`);
+    config = await responseConfig.json();
 
-    
-    let votesData = {
-        labels: [],
-        data: [],
-        backgroundColors: []
-    };
-    
-    const masaiList = [];
-    
-    const selfVotes = [];
-    
-    try {
-        const response = await fetch(`${APIEndpoint}/votes/`);
-        const votes = await response.json();
-
-        if (response.ok) {
-            // Obtener información de los usuarios
-            const usersResponse = await fetch(`${APIEndpoint}/users/`);
-            const users = await usersResponse.json();
-
-            const votingCount = [];
-
-            // Contar los votos para cada usuario
-            votes.forEach(vote => {
-                
-                const targetUserId = vote.targetUserId;
-
-                if (votingCount.find((user) => user.name == targetUserId) == null) {
-                    votingCount.push({name: targetUserId, votesIn: 0, votesOut: 0, votes: 0, selfVotes: 0, comments: []});
-                }
-
-                if (vote.targetUserId === vote.voterId) {
-                    votingCount.find((user) => user.name == targetUserId).selfVotes++;
-                }
-
-                if (getUserTeam(users, vote.voterId) == getUserTeam(users, vote.targetUserId)) {
-                    addTeamVote(getUserTeam(users, vote.targetUserId), "in");
-                    votingCount.find((user) => user.name == targetUserId).votesIn++;
-                } else {
-                    addTeamVote(getUserTeam(users, vote.targetUserId), "out");
-                    votingCount.find((user) => user.name == targetUserId).votesOut++;
-                }
-
-                votingCount.find((user) => user.name == targetUserId).votes++;
-                if (vote.comment != null) {
-                    votingCount.find((user) => user.name == targetUserId).comments.push(vote.comment);
-                }
-            });
-
-            votingCount.sort(function(a, b) {
-                return b.votes - a.votes;
-            });            
-
-            if (usersResponse.ok) {
-                // Encontrar al usuario más votado
-                let maxVotesUser = [];
-                let maxVotes = 0;
-
-                votingCount.forEach(userVoted => {
-                    const votesReceived = userVoted.votes;
-                    if (votesReceived >= maxVotes) {
-                        maxVotes = votesReceived;
-                        maxVotesUser.push(userVoted.name);
-                    }
-                });
-
-                // Mostrar los resultados de las votaciones
-                votingCount.forEach(user => {
-                    const votesReceived = user.votes || 0;
-                    
-                    const tr = document.createElement('tr');
-                    const td1 = document.createElement('td');
-                    td1.textContent = `${user.name}`;
-
-                    const td2 = document.createElement('td');
-                    td2.textContent = `${votesReceived}`;
-
-                    const td3 = document.createElement('td');
-                    td3.textContent = `${user.votesIn}`;
-                    
-                    const td4 = document.createElement('td');
-                    td4.textContent = `${user.votesOut}`;    
-                    
-                    const td5 = document.createElement('td');
-                    td5.textContent = user.selfVotes == 1 ? "✌️" : "";
-
-                    tr.appendChild(td1);
-                    tr.appendChild(td2);
-                    tr.appendChild(td3);
-                    tr.appendChild(td4);
-                    tr.appendChild(td5);
-
-                    votesData.labels.push(user.name);
-                    votesData.data.push(votesReceived);
-                    votesData.backgroundColors.push(generateRandomColor());
-
-                    if (maxVotesUser.indexOf(user.name) > -1) {
-                        tr.classList.add('most-voted'); // Agregar clase de estilo para resaltar
-                        masaiList.push({ name: user.name, comments: user.comments });
-                    }
-                    votingResultsElement.appendChild(tr);
-                });
-
-
-            } else {
-                console.error('Error al obtener la lista de usuarios:', users.error);
-            }
+    if (config.votingStatus == "open") {
+        if (user.role == "ADMIN") {
+            return true;
         } else {
-            console.error('Error al obtener los votos:', votes.error);
+            return false;            
         }
-    } catch (error) {
-        console.error('Error al cargar los resultados de votaciones:', error);
+    } else {        
+        return true;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {    
+    await getHeader();
+    APIEndpoint = await getBackendAddress();
+
+    if (await canOpenVotesPage()) {
+        teamListData = await getTeams();
+    
+        const votingResultsElement = document.getElementById('votingResults');
+    
+        
+        let votesData = {
+            labels: [],
+            data: [],
+            backgroundColors: []
+        };
+        
+        const masaiList = [];
+        
+        const selfVotes = [];
+        
+        try {
+            const response = await fetch(`${APIEndpoint}/votes/`);
+            const votes = await response.json();
+    
+            if (response.ok) {
+                // Obtener información de los usuarios
+                const usersResponse = await fetch(`${APIEndpoint}/users/`);
+                const users = await usersResponse.json();
+    
+                const votingCount = [];
+    
+                // Contar los votos para cada usuario
+                votes.forEach(vote => {
+                    
+                    const targetUserId = vote.targetUserId;
+    
+                    if (votingCount.find((user) => user.name == targetUserId) == null) {
+                        votingCount.push({name: targetUserId, votesIn: 0, votesOut: 0, votes: 0, selfVotes: 0, comments: []});
+                    }
+    
+                    if (vote.targetUserId === vote.voterId) {
+                        votingCount.find((user) => user.name == targetUserId).selfVotes++;
+                    }
+    
+                    if (getUserTeam(users, vote.voterId) == getUserTeam(users, vote.targetUserId)) {
+                        addTeamVote(getUserTeam(users, vote.targetUserId), "in");
+                        votingCount.find((user) => user.name == targetUserId).votesIn++;
+                    } else {
+                        addTeamVote(getUserTeam(users, vote.targetUserId), "out");
+                        votingCount.find((user) => user.name == targetUserId).votesOut++;
+                    }
+    
+                    votingCount.find((user) => user.name == targetUserId).votes++;
+                    if (vote.comment != null) {
+                        votingCount.find((user) => user.name == targetUserId).comments.push(vote.comment);
+                    }
+                });
+    
+                votingCount.sort(function(a, b) {
+                    return b.votes - a.votes;
+                });            
+    
+                if (usersResponse.ok) {
+                    // Encontrar al usuario más votado
+                    let maxVotesUser = [];
+                    let maxVotes = 0;
+    
+                    votingCount.forEach(userVoted => {
+                        const votesReceived = userVoted.votes;
+                        if (votesReceived >= maxVotes) {
+                            maxVotes = votesReceived;
+                            maxVotesUser.push(userVoted.name);
+                        }
+                    });
+    
+                    // Mostrar los resultados de las votaciones
+                    votingCount.forEach(user => {
+                        const votesReceived = user.votes || 0;
+                        
+                        const tr = document.createElement('tr');
+                        const td1 = document.createElement('td');
+                        td1.textContent = `${user.name}`;
+    
+                        const td2 = document.createElement('td');
+                        td2.textContent = `${votesReceived}`;
+    
+                        const td3 = document.createElement('td');
+                        td3.textContent = `${user.votesIn}`;
+                        
+                        const td4 = document.createElement('td');
+                        td4.textContent = `${user.votesOut}`;    
+                        
+                        const td5 = document.createElement('td');
+                        td5.textContent = user.selfVotes == 1 ? "✌️" : "";
+    
+                        tr.appendChild(td1);
+                        tr.appendChild(td2);
+                        tr.appendChild(td3);
+                        tr.appendChild(td4);
+                        tr.appendChild(td5);
+    
+                        votesData.labels.push(user.name);
+                        votesData.data.push(votesReceived);
+                        votesData.backgroundColors.push(generateRandomColor());
+    
+                        if (maxVotesUser.indexOf(user.name) > -1) {
+                            tr.classList.add('most-voted'); // Agregar clase de estilo para resaltar
+                            masaiList.push({ name: user.name, comments: user.comments });
+                        }
+                        votingResultsElement.appendChild(tr);
+                    });
+    
+    
+                } else {
+                    console.error('Error al obtener la lista de usuarios:', users.error);
+                }
+            } else {
+                console.error('Error al obtener los votos:', votes.error);
+            }
+        } catch (error) {
+            console.error('Error al cargar los resultados de votaciones:', error);
+        }
+    
+        masaiList.forEach(masai => {
+            const liItem = document.createElement("li");
+    
+            const masaiIcon = document.createElement("img");
+            masaiIcon.src = "resources/masai.png";
+    
+            const masaiName = document.createElement('span');
+            masaiName.textContent = masai.name;
+    
+            const marquee = document.createElement('div');
+            marquee.className = "marquee";
+    
+            const marqueeContent = document.createElement('div');
+            marqueeContent.className = "marquee-content";        
+    
+            const userComments = masai.comments.reduce((comments, comment) => {
+                const foundComment = comments.find((objeto) => {
+                    return objeto.comment === comment;
+                });
+            
+                if (foundComment) {
+                    foundComment.count++;
+                } else {
+                    comments.push({ comment: comment, count: 1 });
+                }
+            
+                return comments;
+            }, []);
+    
+            userComments.forEach(comment => {
+                const tagComment = document.createElement("span");
+                tagComment.innerText = comment.comment;
+                tagComment.style.fontSize = `${comment.count * 10}px`;
+                tagComment.title = `${comment.count} ${comment.count > 1 ? "veces": "vez"}`;
+                marqueeContent.appendChild(tagComment);
+            });
+    
+            marquee.appendChild(marqueeContent);
+    
+            liItem.appendChild(masaiIcon);
+            liItem.appendChild(masaiName);
+            liItem.appendChild(marquee);
+    
+    
+            document.querySelector("#masainame").appendChild(liItem);
+        });
+    
+        //showSelfVotes(selfVotes);
+    
+        showTeamVotes();
+    
+        populateChart(votesData);
+
+        if (window.location.href.split("/").pop().indexOf("Report") > -1) { 
+            setTimeout(async () => {
+                await document.querySelectorAll(".marquee-content").forEach((obj) => {
+                    obj.classList.remove("marquee-content");
+                });
+                window.print();
+                window.close();
+            }, 1000)
+        };
+    } else {
+        alert("El periodo de votación está en curso");
+        window.location.href = "index.html"
     }
 
-    masaiList.forEach(masai => {
-        const liItem = document.createElement("li");
-
-        const masaiIcon = document.createElement("img");
-        masaiIcon.src = "resources/masai.png";
-
-        const masaiName = document.createElement('span');
-        masaiName.textContent = masai.name;
-
-        const marquee = document.createElement('div');
-        marquee.className = "marquee";
-
-        const marqueeContent = document.createElement('div');
-        marqueeContent.className = "marquee-content";        
-
-        const userComments = masai.comments.reduce((comments, comment) => {
-            const foundComment = comments.find((objeto) => {
-                return objeto.comment === comment;
-            });
-        
-            if (foundComment) {
-                foundComment.count++;
-            } else {
-                comments.push({ comment: comment, count: 1 });
-            }
-        
-            return comments;
-        }, []);
-
-        userComments.forEach(comment => {
-            const tagComment = document.createElement("span");
-            tagComment.innerText = comment.comment;
-            tagComment.style.fontSize = `${comment.count * 10}px`;
-            tagComment.title = `${comment.count} ${comment.count > 1 ? "veces": "vez"}`;
-            marqueeContent.appendChild(tagComment);
-        });
-
-        marquee.appendChild(marqueeContent);
-
-        liItem.appendChild(masaiIcon);
-        liItem.appendChild(masaiName);
-        liItem.appendChild(marquee);
-
-
-        document.querySelector("#masainame").appendChild(liItem);
-    });
-
-    //showSelfVotes(selfVotes);
-
-    showTeamVotes();
-
-    populateChart(votesData);
+    
 });
 
 function showSelfVotes(selfVotes) {

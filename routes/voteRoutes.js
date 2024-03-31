@@ -62,10 +62,17 @@ router.post('/', async (req, res) => {
         const response = await fetch(`${configAPI}votingLimit`, options);
         const responseData = await response.json();
 
+        const votingStatus = await fetch(`${configAPI}votingStatus`, options);
+        const votingStatusResponse = await votingStatus.json();        
+
         const userVotesCount = await countVotesByUser(newVote.voterId);
 
         console.log("votingLimit", responseData.votingLimit);
         console.log("userVotesCount", userVotesCount);
+
+        if (votingStatusResponse.votingStatus == "closed") {
+            throw new Error("votingClosed");
+        }
 
         if (responseData.votingLimit > -1 && userVotesCount >= responseData.votingLimit) {
             throw new Error("limitExceded");
@@ -88,10 +95,16 @@ router.post('/', async (req, res) => {
             }
         });
     } catch (error) {
-        if (error.message == "limitExceded") {
-            res.status(429).json({ error: "El usuario ya ha alcanzado el número de votos disponible"});
-        } else {
-            res.status(404).json({ error: 'Uno de los usuarios no existe' });
+        switch (error.message) {
+            case "limitExceded":
+                res.status(429).json({ error: "El usuario ya ha alcanzado el número de votos disponible"});
+                break;
+            case "votingClosed":
+                res.status(401).json({ error: "El periodo de votación está cerrado en este momento"});
+                break;                        
+            default:
+                res.status(404).json({ error: 'Uno de los usuarios no existe' });
+                break;
         }
     }
 });
@@ -131,6 +144,22 @@ function countVotesByUser(userId) {
         });
     });
 }
+
+router.delete('/comment/:comment', (req, res) => {
+    const comment = req.params.comment;
+
+    db.update({ comment: comment }, { $set: { comment: "" }}, { multi: true }, (err, users) => {
+        if (err) {
+            res.status(500).json({ error: err });
+        } else {
+            if (users.length === 0) {
+                res.status(404).json({ error: 'Comentario no encontrado' });
+            } else {
+                res.json(users);
+            }
+        }
+    });
+});
 
 
 module.exports = router;

@@ -1,5 +1,3 @@
-var APIEndpoint = "";
-
 var teamListData;
 
 async function updateConfig(value) {
@@ -17,7 +15,7 @@ async function updateConfig(value) {
             });
     
             if (response.ok) {
-                window.location.href = 'votes.html';
+                window.location.href = 'admin.html';
             } else {
                 console.error('Error al actualizar la configuración:', response.error);
             }
@@ -27,29 +25,85 @@ async function updateConfig(value) {
     }
 }
 
-async function addLimitConfigButton() {
+async function votingStatus(value, dateTime) {
+    try {
+        let response2 = { ok: true, error: null };
+        const response = await fetch(`${APIEndpoint}/config/votingStatus`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ votingStatus: value })
+        });
+
+        if (value == "open" && dateTime != null) {
+            response2 = await fetch(`${APIEndpoint}/config/programVotingEnd`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ date: dateTime.split(" ")[0], time: dateTime.split(" ")[1] })
+            });
+        }
+
+        if (value == "closed") {            
+            response2 = await fetch(`${APIEndpoint}/config/programVotingEnd`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });            
+        }
+
+        if (response.ok && response2.ok) {
+            window.location.href = 'admin.html';
+        } else {
+            console.error('Error al actualizar la configuración:', response.error, response2.error);
+        }
+    } catch (error) {
+        console.error('Error actualizar la configuración votar:', error);
+    }
+}
+
+async function addConfigButtons() {
     const limitContainer = document.getElementById("limits");
     
-    const responseConfig = await fetch(`${APIEndpoint}/config/votingLimit`);
-    const newButton = document.createElement("button");
+    const responseConfig = await fetch(`${APIEndpoint}/config`);
+    const votingLimitButton = document.createElement("button");
+    const configStatusButton = document.createElement("button");
 
     config = await responseConfig.json();
 
     if (config.votingLimit == -1) {
-        newButton.innerText = "Voto único";
+        votingLimitButton.innerText = "1️⃣ Voto único";
         
-        newButton.addEventListener('click', async function() {
+        votingLimitButton.addEventListener('click', async function() {
             await updateConfig(1);
         });
     } else {
-        newButton.innerText = "Voto libre";
+        votingLimitButton.innerText = "♾️ Voto libre";
         
-        newButton.addEventListener('click', async function() {
+        votingLimitButton.addEventListener('click', async function() {
             await updateConfig(-1);
         });        
     }
 
-    limitContainer.appendChild(newButton);
+    if (config.votingStatus == "closed") {
+        configStatusButton.innerText = "🔓 Abrir votaciones";
+        
+        configStatusButton.addEventListener('click', async function() {
+            document.getElementById("endVotingDateTimePicker").style.display = "block";            
+        });
+    } else {
+        configStatusButton.innerText = "🔒 Cerrar votaciones";
+        
+        configStatusButton.addEventListener('click', async function() {            
+            await votingStatus("closed");
+        });
+    }    
+
+    limitContainer.appendChild(votingLimitButton);
+    limitContainer.appendChild(configStatusButton);
 
 }
 
@@ -115,10 +169,11 @@ function showTeamVotes() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    await getHeader();
     APIEndpoint = await getBackendAddress();
     teamListData = await getTeams();
     
-    await addLimitConfigButton();
+    await addConfigButtons();
 
     const deleteVotesButton = document.getElementById('deleteVotesButton');
 
@@ -129,6 +184,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             deleteAllVotes();
         }
     });    
+
+    dateTimePickerInit();
 });
 
 async function deleteAllVotes() {
@@ -191,4 +248,35 @@ function generateRandomColor() {
     var randomColor = 'rgba(' + red + ',' + green + ',' + blue + ',' + alpha + ')';
     
     return randomColor;
+}
+
+function dateTimePickerInit() {    
+    flatpickr("#endVoting", {
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        time_24hr: true,
+        minDate: "today",
+        "locale": {
+            "firstDayOfWeek": 1
+        }
+    });
+
+
+    document.querySelector(".datetime-modal-content").addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        ev.preventDefault();
+    });
+
+    document.querySelector(".datetime-modal").addEventListener("click", (ev) => {
+        document.getElementById("endVotingDateTimePicker").style.display = "none";
+    });
+
+    document.querySelector("#confirmCloseVoting").addEventListener("click", async () => {
+        if (document.querySelector("#endVoting").value != "") {
+            await votingStatus("open", document.querySelector("#endVoting").value);
+            document.getElementById("endVotingDateTimePicker").style.display = "none";
+        } else {
+            alert("Debes indicar una fecha/hora de finalización de las votaciones");
+        }
+    });
 }

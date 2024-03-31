@@ -1,5 +1,3 @@
-var APIEndpoint = "";
-
 async function updateConfig(value) {
 
     const confirmation = confirm('Cambiar el tipo de voto eliminará todas las votaciones actuales. ¿Quieres continuar?');
@@ -25,7 +23,7 @@ async function updateConfig(value) {
     }
 }
 
-async function addLimitConfigButton() {
+async function addConfigButtons() {
     const limitContainer = document.getElementById("limits");
     const votingMode = document.getElementById("votingMode");
     const responseConfig = await fetch(`${APIEndpoint}/config/votingLimit`);
@@ -52,6 +50,7 @@ async function addLimitConfigButton() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    await getHeader();
     await loadTeamData();
 });
 
