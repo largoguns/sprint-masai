@@ -222,21 +222,37 @@ document.addEventListener('DOMContentLoaded', async () => {
                         
                         const td5 = document.createElement('td');
                         td5.textContent = user.selfVotes == 1 ? "✌️" : "";
+
+                        const td6 = document.createElement('td');
+
+                        console.log("user.comments.length", user.comments.length);
+
+                        const filteredComments = filterComments(user.comments);
+
+                        if (filteredComments != "") {
+                            const divComments = document.createElement("div");
+                            divComments.style.cursor = "help";
+                            divComments.textContent = "💬";
+                            divComments.title = filteredComments;
+                            td6.appendChild(divComments);
+                        }
     
                         tr.appendChild(td1);
                         tr.appendChild(td2);
                         tr.appendChild(td3);
                         tr.appendChild(td4);
                         tr.appendChild(td5);
+                        tr.appendChild(td6);
     
                         votesData.labels.push(user.name);
                         votesData.data.push(votesReceived);
                         votesData.backgroundColors.push(generateRandomColor());
-    
+
                         if (maxVotesUser.indexOf(user.name) > -1) {
-                            tr.classList.add('most-voted'); // Agregar clase de estilo para resaltar
+                            tr.classList.add('most-voted');
                             masaiList.push({ name: user.name, comments: user.comments });
                         }
+                        
                         votingResultsElement.appendChild(tr);
                     });
     
@@ -391,3 +407,25 @@ function generateRandomColor() {
     return randomColor;
 }
 
+function filterComments(comments) {
+    
+    const matches = {};
+
+    comments.forEach(elem => {    
+        if (elem !== "") {
+            matches[elem] = (matches[elem] || 0) + 1;
+        }
+    });
+
+    const matchesArray = Object.keys(matches).map(key => ({ texto: key, total: matches[key] }));
+
+    matchesArray.sort((a, b) => b.total - a.total);
+
+    let commentsString = "";
+
+    matchesArray.forEach(item => {
+        commentsString += `${item.texto} x ${item.total}\n`;
+    });
+
+    return commentsString;
+}
