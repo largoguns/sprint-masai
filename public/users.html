@@ -4,7 +4,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resultados de Votaciones</title>
+    <title>Gestión de Masais</title>
     <link rel="stylesheet" href="styles/styles.css">
 </head>
 <body>
@@ -18,16 +18,40 @@
         <div class="container" >
             <ul id="masailist" class="masai-list"></ul>    
         </div>
+        <div class="container" id="buttonBar">
+            <button id="addNew">Nuevo Masai</button>
+        </div>        
     </div>
 
     <div id="teamPopup" class="popup">
         <div class="popup-contenido">
-            <span onclick="cerrarPopup()" class="cerrar">&times;</span>
+            <span onclick="cerrarPopup('teamPopup')" class="cerrar">&times;</span>
             <p>Selecciona un equipo</p>
             <ul id="teamSelectList">
             </ul>
         </div>
     </div>
+
+    <div id="addNewMasai" class="popup">
+        <div class="popup-contenido">
+            <span onclick="cerrarPopup('addNewMasai')" class="cerrar">&times;</span>
+            <h3>Nuevo Masai</h3>
+            <label for="name">Nombre</label>
+            <input id="name" name="name" type="string"></input>
+            <label for="email">Email</label>
+            <input id="email" type="string"></input>
+            <label for="job">Puesto</label>
+            <select id="job">
+                <option>DEVELOPER</option>
+                <option>TESTER</option>
+                <option>BUSINESS ANALYST</option>
+                <option>UX DESIGNER</option>
+            </select>
+            <div class="buttons">
+                <button id="addNewMasaiSubmit">Crear nuevo Masái</button>
+            </div>
+        </div>
+    </div>    
     
     <script src="scritps/common.js"></script>
     <script src="scritps/users.js"></script>

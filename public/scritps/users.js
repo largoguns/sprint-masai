@@ -51,10 +51,46 @@ async function addConfigButtons() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     await getHeader();
-    await loadTeamData();
+    await loadUsersData();
+    addNewMasaiHandler();
 });
 
-async function loadTeamData() {
+function addNewMasaiHandler() {
+    const addNew = document.getElementById('addNew');
+
+    addNew.addEventListener('click', async () => {
+        const popup = document.getElementById("addNewMasai");    
+        popup.style.display = "block";
+
+        addNewMasaiSubmit.addEventListener("click", async () => {
+            const name = document.querySelector("#name").value;
+            const email = document.querySelector("#email").value;
+            const job = document.querySelector("#job").value;
+
+            if (name != null && email != null) {
+                const response = await fetch(`${APIEndpoint}/users/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, job })
+                });
+            
+                if (response.ok) {
+                    const popup = document.getElementById("addNewMasai");    
+                    popup.style.display = "none";
+                    await loadUsersData();
+                } else {
+                    console.error('Error al crear el nuevo masai:', response.error);
+                }
+            }
+        });
+
+
+    });    
+}
+
+async function loadUsersData() {
     APIEndpoint = await getBackendAddress();
 
     const teamsReponse = await fetch(`${APIEndpoint}/teams/`);
@@ -88,19 +124,42 @@ async function loadTeamData() {
             users.forEach(user => {
                 const li = document.createElement('li');
                 li.textContent = `${user.name}`;
-                
+                const deleteUser = document.createElement("span");
+                deleteUser.innerText = "❌";
+                deleteUser.className = "deleteUser"
+                deleteUser.addEventListener('click', async () => handleDeleteMasai(user.name, user._id));
+
                 const spanTeam = document.createElement("span");
                 spanTeam.className = "userTeam"
                 spanTeam.innerText = getTeamName(teams, user.team) || "Sin grupo";
                 spanTeam.addEventListener('click', () => mostrarPopup(user._id));
                 
                 li.appendChild(spanTeam);
+                li.appendChild(deleteUser);
                 masailistElement.appendChild(li);
 
             });
         }
     } catch (error) {
         console.error('Error al cargar los resultados de votaciones:', error);
+    }
+}
+
+async function handleDeleteMasai(masaiName, masaiId) {
+
+    const confirmation = confirm(`¿Quieres que al masai <${masaiName}> se lo coma el león?`);
+
+    if (confirmation) {
+        const deleteResponse = await fetch(`${APIEndpoint}/users/${masaiId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }); 
+    
+        if (deleteResponse.ok) {
+            await loadUsersData();
+        }
     }
 }
 
@@ -120,8 +179,8 @@ function mostrarPopup(user) {
     popup.style.display = "block";
 }
 
-function cerrarPopup() {
-    var popup = document.querySelector("#teamPopup");
+function cerrarPopup(popupName) {
+    var popup = document.querySelector(`#${popupName}`);
     popup.style.display = "none";
 }
 
@@ -138,8 +197,8 @@ async function setUserTeam(valor) {
     });
 
     if (response.ok) {
-        await loadTeamData();
-        cerrarPopup();
+        await loadUsersData();
+        cerrarPopup("teamPopup");
     } else {
         console.error('Error al actualizar al usuario:', response.error);
     }

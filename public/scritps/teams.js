@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         
             if (response.ok) {
-                await loadTeamData();
+                await loadUsersData();
                 cerrarPopup();
             } else {
                 console.error('Error al crear el equipo:', response.error);
@@ -22,10 +22,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    await loadTeamData();
+    await loadUsersData();
 });
 
-async function loadTeamData() {
+async function loadUsersData() {
     APIEndpoint = await getBackendAddress();
 
     const teamList = document.getElementById('teamList');
@@ -86,7 +86,7 @@ async function setUserTeam(valor) {
     });
 
     if (response.ok) {
-        await loadTeamData();
+        await loadUsersData();
         cerrarPopup();
     } else {
         console.error('Error al actualizar al usuario:', response.error);
@@ -109,7 +109,7 @@ async function deleteComment(teamId) {
             });
 
             if (responseDeleteTeam.ok && responseDeleteUsersTeam.ok) {
-                await loadTeamData();
+                await loadUsersData();
             } else {
                 console.error('Error:', response.error, responseDeleteUsersTeam.error);
             }
