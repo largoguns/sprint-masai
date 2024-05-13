@@ -7,6 +7,9 @@ const fs = require("fs");
 const cors = require("cors");
 var os = require("os");
 
+const cron = require('node-cron');
+const axios = require('axios');
+
 const userRoutes = require("./routes/userRoutes");
 const voteRoutes = require("./routes/voteRoutes");
 const configRoutes = require("./routes/configRoutes");
@@ -101,6 +104,85 @@ app.listen(port, () => {
   console.log(`Servidor Masáis corriendo en ${port}`);
 });
 
+async function getUsersData() {
+  try {
+      const response = await axios.get('http://localhost:3000/api/users');
+      return response.data;
+  } catch (error) {
+      console.error('Error getting users data:', error);
+      return [];
+  }
+}
+
+function isBirthdayToday(birthday) {
+  const today = new Date();
+  const dia = String(today.getDate()).padStart(2, '0');
+  const mes = String(today.getMonth() + 1).padStart(2, '0');
+  const todayBirthday = `${dia}/${mes}`;
+  return birthday === todayBirthday;
+}
+
+async function sendTeamsMessage(user) {
+  try {
+      const message = {
+        "type": "message",
+        "attachments": [
+            {
+                "contentType": "application/vnd.microsoft.card.adaptive",
+                "content": {
+                    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                    "type": "AdaptiveCard",
+                    "version": "1.4",
+                    "body": [
+                        {
+                            "type": "TextBlock",
+                            "id": "MentionTextBlock",
+                            "text": "¡Tenemos cumpleañero!",
+                            "weight": "Bolder",
+                            "size": "Large"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": `Felicitemos hoy a **${user.name}**`,
+                            "size": "Medium"
+                        },
+                        {
+                            "type": "TextBlock",
+                            "text": "Que pases un magnífico día hoy",
+                            "size": "Medium"
+                        }
+                    ]
+                }
+            }
+        ]
+    };
+
+      console.log('Enviando mensaje a Teams:', JSON.stringify(message));
+      await axios.post('https://blevraultgroup.webhook.office.com/webhookb2/33eeba4c-e031-4e60-9ccf-e083d7523cd3@8c9f5440-d6bf-4e89-a448-9e3e3a224ba3/IncomingWebhook/0b5678f32339467db41e8f25a9b5287d/be94e17c-24d5-409b-b7b2-18323c584f80', message);
+      console.log('Mensaje enviado a Teams:');
+  } catch (error) {
+      console.error('Error al enviar el mensaje a Teams:', error);
+  }
+}
+
+async function birthdayCheck() {
+  const users = await getUsersData();
+
+  users.forEach(user => {
+      if (isBirthdayToday(user.birthday)) {
+          sendTeamsMessage(user);
+      }
+  });
+}
+
+cron.schedule('00 07 00 * * *', async () => {
+  console.log('Executing cron task...');
+  
+  await birthdayCheck();
+}, {
+  scheduled: true,
+  timezone: "Europe/Madrid"
+});
 
 // app.listen(process.env.PORT, () => {
 //     console.log(`Servidor Masáis corriendo en ${endpoint}`);

@@ -28,11 +28,33 @@ async function getHeader() {
             await getUserHeader();
         }
 
+        await getVotingPeriodStatus();
+
+        await privacityButton();
         await logoutButton();
         await welcomeUser();
-        await getVotingPeriodStatus();
     }
     
+}
+
+async function privacityButton() {
+    const userData = JSON.parse(localStorage.getItem('MasaisData'));
+    if (document.getElementById('privacity') != null) {
+        if (userData.privateVote != null) {
+            if (userData.privateVote == true) {
+                document.querySelector("#privacity").textContent = "🔏 Voto privado";
+            } else {
+                document.querySelector("#privacity").textContent = "👁️ Voto público";
+            }
+        } else {
+            document.querySelector("#privacity").textContent = "👁️ Voto público";
+        }
+
+        document.getElementById('privacity').addEventListener('click', function() {
+            togglePrivacity();
+        }); 
+    }
+   
 }
 
 async function getAdminHeader() {
@@ -83,6 +105,35 @@ async function logoutButton() {
     });    
 }
 
+async function togglePrivacity() {
+    const userData = JSON.parse(localStorage.getItem('MasaisData'));
+
+    if (userData.privateVote != null) {
+        if (userData.privateVote == true) {
+            userData.privateVote = false;
+        } else {
+            userData.privateVote = true;
+        }
+    } else {
+        userData.privateVote = true;
+    }
+
+    const response = await fetch(`${APIEndpoint}/users/${userData._id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(userData)
+    });
+
+    if (response.ok) {
+        localStorage.setItem('MasaisData', JSON.stringify(userData));
+        location.reload();
+    } else {
+        console.error('Error al crear el nuevo masai:', response.error);
+    }
+}
+
 async function welcomeUser() {
     const user = JSON.parse(localStorage.getItem('MasaisData'));
     document.getElementById('loggedInUsername').textContent = user.name;
@@ -93,13 +144,13 @@ async function getVotingPeriodStatus() {
     const configData = await response.json();
 
     if (configData.votingStatus == "open") {                
-        document.getElementById('votingPeriodStatus').classList.remove("hidden");
-
         votingLimitHandler = setInterval(function() {
             getRemainigDateTime(configData.votingLimit);
         }, 1000);        
     } else {
-        document.getElementById('votingPeriodStatus').classList.add("hidden");
+        if (document.getElementById('privacity') != null) {
+            document.getElementById('privacity').classList.add("hidden");
+        }
     }
 
 }

@@ -250,7 +250,7 @@ function generateRandomColor() {
     return randomColor;
 }
 
-function dateTimePickerInit() {    
+function dateTimePickerInit() {
     flatpickr("#endVoting", {
         enableTime: true,
         dateFormat: "Y-m-d H:i",

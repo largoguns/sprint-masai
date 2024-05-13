@@ -127,7 +127,7 @@ button:hover {
 
 .table-container {
     margin: 0 auto;
-    max-width: 90%; /* Define el ancho máximo de la tabla */
+    max-width: 90%;
 }
 
 table {
@@ -141,9 +141,14 @@ table {
     float: right;
 }
 
+#privacity {
+    width: 150px;
+    float: right;
+}
+
 .most-voted {
     font-weight: bold;
-    color: #007bff; /* Cambia el color según tus preferencias */
+    color: #007bff;
 }
 
 #buttonBar {
@@ -155,15 +160,12 @@ table {
     width: auto;
 }
 
-
-/* Resetear estilos predeterminados de la lista */
 ul {
     list-style-type: none;
     padding: 0;
     margin: 0;
 }
 
-/* Estilo para cada elemento de la lista */
 li {
     background-color: #f9f9f9;
     border-radius: 8px;
@@ -173,12 +175,10 @@ li {
 }
 
 
-/* Estilo para el contenido dentro de cada elemento de la lista */
 li .content {
     padding: 15px;
 }
 
-/* Estilo para el texto del elemento de la lista */
 li p {
     margin: 0;
     font-size: 16px;
@@ -197,13 +197,12 @@ li p {
 }
 
 .masai-list li img {
-    width: 40px; /* Ajusta el tamaño según tus necesidades */
-    height: auto; /* Para mantener la proporción */
+    width: 40px;
+    height: auto;
     margin-right: 10px;
 }
 
 .userTeam {
-    cursor: pointer;
     float: right;
     font-size: 16px;
 }
@@ -307,30 +306,39 @@ dialog form {
     width: 100%;
 }
 
-#votingComment {
+.votingComment {
     font-family: Arial, sans-serif;
     font-size: 16px;
     padding: 8px;
     border-radius: 5px;
     border: 1px solid #ccc;
-    width: 100%;
+    width: 91%;
     background-color: #f7f7f7;
+    margin-right: 5px;
   }
   
-  #votingComment option {
+  .votingComment option {
     padding: 5px;
     background-color: #fff;
     color: #333;
   }
   
-  #votingComment option:hover {
+  .votingComment option:hover {
     background-color: #e0e0e0;
   }
   
-  #votingComment option:checked {
+  .votingComment option:checked {
     background-color: #c0c0c0;
     color: #fff;
   }
+
+.addNewVotingComment {
+    cursor:pointer;
+}
+
+.votingCommentDelete {
+    cursor: pointer;
+}
 
 .marquee {
     width: 100%;
@@ -422,4 +430,8 @@ dialog form {
 
 #addNewMasai .buttons {
     margin-top: 20px;
+}
+
+.cur-year {
+    display: none !important;
 }

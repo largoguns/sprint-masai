@@ -1,3 +1,5 @@
+let votingStatus;
+
 async function fetchUserList() {
     try {
         const response = await fetch(`${APIEndpoint}/users/`);
@@ -37,14 +39,14 @@ async function buildUserList() {
     try {
         const userList = await fetchUserList();
         const user = JSON.parse(localStorage.getItem('MasaisData'));
-        const userVotes = await fetchUserVotes(user.name);
+        const userVotes = await fetchUserVotes(user._id);
 
         // Crear un mapa de votos por nombre de usuario para facilitar la búsqueda
         const userVotesMap = {};
         userVotes.forEach(vote => {
-            const targetUser = userList.find(user => user.name === vote.targetUserId);
+            const targetUser = userList.find(user => user._id === vote.targetUserId);
             if (targetUser) {
-                userVotesMap[targetUser.name] = vote._id;
+                userVotesMap[targetUser._id] = vote._id;
             }
         });
 
@@ -53,7 +55,7 @@ async function buildUserList() {
            
             return {
                 ...user,
-                voteId: userVotesMap[user.name] || null
+                voteId: userVotesMap[user._id] || null
             };
         });
 
@@ -67,6 +69,7 @@ async function buildUserList() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     APIEndpoint = await getBackendAddress();
+    checkVotingPeriodStatus();
     
     const user = JSON.parse(localStorage.getItem('MasaisData'));
     if (user) {
@@ -75,19 +78,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('mainContent').style.display = 'block';
         
         await getHeader();        
-        loadComments();
     
     } else {
         document.getElementById('loginContainer').style.display = 'block';
     }
-
-    document.querySelector("#voteForUser").addEventListener("click", async () => {
-        var votingUser = document.querySelector("#votingUser").innerText;
-        var votingComment = document.querySelector("#votingComment").options[document.querySelector("#votingComment").selectedIndex].textContent;
-        document.querySelector("#votingComment").selectedIndex = 0;
-
-        await voteForUser(votingUser, votingComment);
-    });
 });
 
 // Función para mostrar la lista de usuarios en la tabla
@@ -97,6 +91,8 @@ async function displayUserList(users) {
 
     const teamsReponse = await fetch(`${APIEndpoint}/teams/`);
     const teams = await teamsReponse.json();
+
+    await getVotingPeriodStatus();
 
     users.forEach(user => {
         const row = document.createElement('tr');
@@ -114,25 +110,51 @@ async function displayUserList(users) {
 
         const actionCell = document.createElement('td');
         const actionButton = document.createElement('button');
-        actionButton.textContent = user.voteId ? '🚫' : '👍';
-        actionButton.addEventListener('click', async function() {
-            // Lógica para votar o eliminar voto
-            try {
-                if (user.voteId) {
-                    deleteVote(user.voteId);
-                } else {                    
-                    document.querySelector("#votingUser").innerText = user.name;
-                    document.querySelector("#voteDialog").showModal();
+        if (votingStatus == "open") {
+            actionButton.textContent = user.voteId ? '🚫' : '👍';
+            actionButton.addEventListener('click', async function() {
+                // Lógica para votar o eliminar voto
+                try {
+                    if (user.voteId) {
+                        deleteVote(user.voteId);
+                    } else {                    
+                        document.querySelector("#votingUser").innerText = user._id;                    
+                        await showVotingDialog();
+                    }
+                } catch (error) {
+                    console.error('Error al votar o eliminar voto:', error);
                 }
-            } catch (error) {
-                console.error('Error al votar o eliminar voto:', error);
-            }
-        });
+            });
+        } else {
+            actionButton.textContent = "❌";
+        }
+
         actionCell.appendChild(actionButton);
         row.appendChild(actionCell);
 
         userListElement.appendChild(row);
     });
+}
+
+async function showVotingDialog() {
+    document.querySelector("#votingComments").innerHTML = "";
+    document.querySelector("#voteForUser").removeEventListener("click", voteForUserHandler);
+    document.querySelector(".addNewVotingComment").removeEventListener("click", createNewVotingComment);
+
+    await createNewVotingComment();
+    document.querySelector(".addNewVotingComment").addEventListener("click", createNewVotingComment);
+
+    document.querySelector("#voteForUser").addEventListener("click", voteForUserHandler);
+
+    document.querySelector("#voteDialog").showModal();
+}
+
+async function voteForUserHandler() {
+    const votingUser = document.querySelector("#votingUser").innerText;
+    const comments = document.querySelectorAll('.votingComment');
+    const rawVotes = Array.from(comments).map(select => select.options[select.selectedIndex].text).join('|');
+    const votingComments = [...new Set(rawVotes.split("|"))];
+    await voteForUser(votingUser, votingComments.join("|"));
 }
 
 function getTeamName(teams, id) {
@@ -205,7 +227,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 async function voteForUser(targetUserId, comment) {
     try {
         const user = JSON.parse(localStorage.getItem('MasaisData'));
-        const voterId = user.name;
+        const voterId = user._id;
 
         const response = await fetch(`${APIEndpoint}/votes/`, {
             method: 'POST',
@@ -254,21 +276,44 @@ async function deleteVote(voteId) {
     }
 }
 
-async function loadComments() {
+async function createNewVotingComment() {
     try {
         const response = await fetch(`${APIEndpoint}/comments/`);
         const commentList = await response.json();
 
         if (response.ok) {
-            const commentListContainer = document.querySelector("#votingComment");
+            const commentContainer = document.createElement("div");
+
+            const commentListContainer = document.querySelector("#votingComments");
+            const newVotingComment = document.createElement("select");
+            newVotingComment.classList.add("votingComment");
+
+            const option = document.createElement("option");
+            option.value = "";
+            option.innerText = "";
+            
+            newVotingComment.appendChild(option);
 
             commentList.forEach(comment => {
                 const option = document.createElement("option");
                 option.value = comment.comment;
                 option.innerText = comment.comment;
                 
-                commentListContainer.appendChild(option);
+                newVotingComment.appendChild(option);
             });
+
+            const deleteSpan = document.createElement("span");
+            deleteSpan.innerText = "❌";
+            deleteSpan.classList.add("votingCommentDelete");
+
+            deleteSpan.addEventListener("click", () => {
+                commentListContainer.removeChild(commentContainer);
+            });
+
+            commentContainer.appendChild(newVotingComment);
+            commentContainer.appendChild(deleteSpan);
+
+            commentListContainer.appendChild(commentContainer);
         } else {
             console.error('Error al cargar la lista de usuarios:', commentList.error);
             return [];
@@ -294,4 +339,10 @@ function isNoCapitalizableWord(word) {
     const words = ["de", "del"];
 
     return !words.includes(word);
+}
+
+async function checkVotingPeriodStatus() {
+    const response = await fetch(`${APIEndpoint}/config/`);
+    const configData = await response.json();
+    votingStatus = configData.votingStatus;
 }

@@ -55,14 +55,18 @@ async function getTeams() {
     APIEndpoint = await getBackendAddress();
 
     const teamsReponse = await fetch(`${APIEndpoint}/teams/`);
-    var data = await teamsReponse.json();
+    const teams = await teamsReponse.json();
 
-    for (let index = 0; index < data.length; index++) {
-        data[index]["votesIn"] = 0;
-        data[index]["votesOut"] = 0;
+    const usersReponse = await fetch(`${APIEndpoint}/users/`);
+    const users = await usersReponse.json();
+
+    for (let index = 0; index < teams.length; index++) {
+        teams[index]["members"] = users.filter((u) => u.team == teams[index]._id).length;
+        teams[index]["votesIn"] = 0;
+        teams[index]["votesOut"] = 0;
     }
 
-    return data;
+    return teams;
 }
 
 function addTeamVote(teamId, type) {
@@ -77,8 +81,8 @@ function addTeamVote(teamId, type) {
     }
 }
 
-function getUserTeam(users, userName) {
-    var foundUser = users.find((user) => user.name == userName);
+function getUserTeam(users, userId) {
+    var foundUser = users.find((user) => user._id == userId);
 
     if (foundUser != null) {
         return foundUser.team ?? null;
@@ -90,30 +94,64 @@ function getUserTeam(users, userName) {
 function showTeamVotes() {
     var teamVotes = document.querySelector("#teamVotes");
 
-    teamListData.forEach(team => {
+    const ranking = [];
+
+    const maxVotesGroup = teamListData.reduce((maxGroup, group) => {
+        return (group.votesIn + group.votesOut) > (maxGroup.votesIn + maxGroup.votesOut) ? group : maxGroup;
+      }, teamListData[0]);
+
+    const maxVotes = (maxVotesGroup.votesIn + maxVotesGroup.votesOut);
+
+    for (const teamNumber in teamListData) {
+        const team = teamListData[teamNumber];
+        const totalVotesGroup = team.votesIn + team.votesOut;
+        const numPeopleGroup = team.members;
+        const weightedMeasure = (totalVotesGroup / numPeopleGroup).toFixed(2);
+        ranking.push({ name: team.name, weightedMeasure, votesIn: team.votesIn, votesOut: team.votesOut, members: team.members});
+    }
+
+    ranking.sort((a, b) => b.weightedMeasure - a.weightedMeasure);
+
+    console.log(ranking);
+
+    ranking.forEach(team => {
         const liItem = document.createElement("tr");
 
         const teamName = document.createElement('td');
         teamName.textContent = team.name;
+
+        const members = document.createElement('td');
+        members.textContent = `Miembros ${team.members}`
+
+        const totalVotes = document.createElement('td');
+        totalVotes.textContent = `Total ${team.votesIn + team.votesOut}`;
+
+        const weightedMeasure = document.createElement('td');
+        weightedMeasure.textContent = `Media ${team.weightedMeasure}`;
 
         const votesIn = document.createElement('td');
         votesIn.textContent = `Votos internos ${team.votesIn}`
 
         const votesOut = document.createElement('td');
         votesOut.textContent = `Votos externos ${team.votesOut}`
-
         
         liItem.appendChild(teamName);
+        liItem.appendChild(members);
+        liItem.appendChild(totalVotes);
+        liItem.appendChild(weightedMeasure);
         liItem.appendChild(votesIn);
         liItem.appendChild(votesOut);
-
 
         teamVotes.appendChild(liItem);
     });
 }
 
+function getCurrentUserData() {
+    return JSON.parse(localStorage.getItem('MasaisData'));
+}
+
 async function canOpenVotesPage() {
-    const user = JSON.parse(localStorage.getItem('MasaisData'));
+    const user = getCurrentUserData();
     const responseConfig = await fetch(`${APIEndpoint}/config`);
     config = await responseConfig.json();
 
@@ -121,10 +159,49 @@ async function canOpenVotesPage() {
         if (user.role == "ADMIN") {
             return true;
         } else {
-            return false;            
+            return false;
         }
     } else {        
         return true;
+    }
+}
+
+function loadMyVotes(votes, users) {
+    const currentUser = getCurrentUserData();
+
+    if (currentUser.privateVote == undefined || currentUser.privateVote == false) {
+        myVotes = votes.filter(v => v.targetUserId == currentUser._id);
+    
+        myVotes.forEach((vote) => {
+            const voteTR = document.createElement("tr");
+            const voteVoterName = document.createElement("td");
+            const voteVoterComments = document.createElement("td");
+    
+            const voter = users.find(user => user._id == vote.voterId);
+
+            if (voter.privateVote == undefined || voter.privateVote == true) {
+                voteVoterName.innerText = capitalize(voter.name);
+            } else {
+                voteVoterName.innerText = "***********";
+            }
+    
+            voteVoterComments.innerText = vote.comment.split("|").join(", ");
+    
+            voteTR.appendChild(voteVoterName);
+            voteTR.appendChild(voteVoterComments);
+            document.querySelector("#myVotes").appendChild(voteTR);
+        });
+    } else {
+        document.querySelector("#myVotes").innerText = "La opción de ocultar votos está activa, por lo que no podrás ver quien te ha votado al igual que los que has votado no sabrán que has sido tu."
+    }
+}
+
+function getUserNameById(users, id) {
+    const foundUser = users.find((user) => user._id == id);
+    if (foundUser != null) {
+        return foundUser.name;
+    } else {
+        return "N/A";
     }
 }
 
@@ -146,8 +223,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         const masaiList = [];
         
-        const selfVotes = [];
-        
         try {
             const response = await fetch(`${APIEndpoint}/votes/`);
             const votes = await response.json();
@@ -164,25 +239,26 @@ document.addEventListener('DOMContentLoaded', async () => {
                     
                     const targetUserId = vote.targetUserId;
     
-                    if (votingCount.find((user) => user.name == targetUserId) == null) {
-                        votingCount.push({name: targetUserId, votesIn: 0, votesOut: 0, votes: 0, selfVotes: 0, comments: []});
+                    if (votingCount.find((user) => user._id == targetUserId) == null) {
+                        votingCount.push({name: getUserNameById(users, targetUserId), _id: targetUserId, votesIn: 0, votesOut: 0, votes: 0, selfVotes: 0, comments: []});
                     }
     
                     if (vote.targetUserId === vote.voterId) {
-                        votingCount.find((user) => user.name == targetUserId).selfVotes++;
+                        votingCount.find((user) => user._id == targetUserId).selfVotes++;
                     }
     
                     if (getUserTeam(users, vote.voterId) == getUserTeam(users, vote.targetUserId)) {
                         addTeamVote(getUserTeam(users, vote.targetUserId), "in");
-                        votingCount.find((user) => user.name == targetUserId).votesIn++;
+                        votingCount.find((user) => user._id == targetUserId).votesIn++;
                     } else {
                         addTeamVote(getUserTeam(users, vote.targetUserId), "out");
-                        votingCount.find((user) => user.name == targetUserId).votesOut++;
+                        votingCount.find((user) => user._id == targetUserId).votesOut++;
                     }
     
-                    votingCount.find((user) => user.name == targetUserId).votes++;
+                    votingCount.find((user) => user._id == targetUserId).votes++;
                     if (vote.comment != null) {
-                        votingCount.find((user) => user.name == targetUserId).comments.push(vote.comment);
+                        const votes = vote.comment.split("|");
+                        votingCount.find((user) => user._id == targetUserId).comments.push(...votes);
                     }
                 });
     
@@ -209,7 +285,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         
                         const tr = document.createElement('tr');
                         const td1 = document.createElement('td');
-                        td1.textContent = `${user.name}`;
+                        td1.textContent = `${capitalize(user.name)}`;
     
                         const td2 = document.createElement('td');
                         td2.textContent = `${votesReceived}`;
@@ -224,8 +300,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         td5.textContent = user.selfVotes == 1 ? "✌️" : "";
 
                         const td6 = document.createElement('td');
-
-                        console.log("user.comments.length", user.comments.length);
 
                         const filteredComments = filterComments(user.comments);
 
@@ -250,12 +324,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                         if (maxVotesUser.indexOf(user.name) > -1) {
                             tr.classList.add('most-voted');
-                            masaiList.push({ name: user.name, comments: user.comments });
+                            masaiList.push({ name: capitalize(user.name), comments: user.comments });
                         }
                         
                         votingResultsElement.appendChild(tr);
                     });
     
+                    loadMyVotes(votes, users);
+
     
                 } else {
                     console.error('Error al obtener la lista de usuarios:', users.error);
@@ -428,4 +504,22 @@ function filterComments(comments) {
     });
 
     return commentsString;
+}
+
+function capitalize(text) {
+    let words = text.toLowerCase().split(" ");
+
+    for (let i = 0; i < words.length; i++) {
+        if (isNoCapitalizableWord(words[i])) {
+            words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1);
+        }
+    }
+
+    return words.join(" ");
+}
+
+function isNoCapitalizableWord(word) {
+    const words = ["de", "del"];
+
+    return !words.includes(word);
 }

@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Masais</title>
     <link rel="stylesheet" href="styles/styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>      
 </head>
 <body>
     <h1>Sonora / WeCitio - Masai del Sprint</h1>
@@ -16,7 +18,8 @@
             <h2>Gestión de Masais</h2>
         </div>
         <div class="container" >
-            <ul id="masailist" class="masai-list"></ul>    
+            <!-- <ul id="masailist" class="masai-list"></ul>     -->
+            <table id="masailist" class="masai-list"></table>
         </div>
         <div class="container" id="buttonBar">
             <button id="addNew">Nuevo Masai</button>
@@ -35,17 +38,33 @@
     <div id="addNewMasai" class="popup">
         <div class="popup-contenido">
             <span onclick="cerrarPopup('addNewMasai')" class="cerrar">&times;</span>
-            <h3>Nuevo Masai</h3>
+            <h3 id="newMasaiH3">Nuevo Masai</h3>
+            <input id="_id" class="hidden" />
             <label for="name">Nombre</label>
             <input id="name" name="name" type="string"></input>
             <label for="email">Email</label>
             <input id="email" type="string"></input>
+            <label for="birthday">Cumpleaños</label>
+            <input type="text" id="birthday" placeholder="Fecha del cumpleaños">
             <label for="job">Puesto</label>
             <select id="job">
                 <option>DEVELOPER</option>
                 <option>TESTER</option>
                 <option>BUSINESS ANALYST</option>
                 <option>UX DESIGNER</option>
+                <option>SOFTWARE ARCHITECT</option>
+                <option>DIRECTOR/A GENERAL</option>
+                <option>DIRECTOR/A DE MARKETING DE PRODUCTO</option>
+                <option>DIRECTOR/A DE DESARROLLO</option>
+                <option>PROJECT MANAGER</option>
+                <option>SCRUM MASTER</option>
+                <option>PRODUCT OWNER</option>
+                <option>QA MANAGER</option>
+            </select>
+            <br />
+            <label for="teamList">Equipo</label>
+            <select id="teamList">
+
             </select>
             <div class="buttons">
                 <button id="addNewMasaiSubmit">Crear nuevo Masái</button>
@@ -53,7 +72,7 @@
         </div>
     </div>    
     
-    <script src="scritps/common.js"></script>
-    <script src="scritps/users.js"></script>
+    <script src="scripts/common.js"></script>
+    <script src="scripts/users.js"></script>
 </body>
 </html>
