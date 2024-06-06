@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     await getHeader();
-    await loadUsersData();
+    await loadTeamsData();
     addNewMasaiHandler();
 });
 
@@ -85,7 +85,7 @@ async function createMasai() {
     
         if (response.ok) {
             cerrarPopup("addNewMasai");
-            await loadUsersData();
+            await loadTeamsData();
         } else {
             console.error('Error al crear el nuevo masai:', response.error);
         }
@@ -133,7 +133,7 @@ async function editMasai() {
     
         if (response.ok) {
             cerrarPopup("addNewMasai");
-            await loadUsersData();
+            await loadTeamsData();
         } else {
             console.error('Error al crear el nuevo masai:', response.error);
         }
@@ -158,7 +158,9 @@ function handleEditMasai(user) {
     addNewMasaiSubmit.addEventListener("click", editMasai);
 }
 
-async function loadUsersData() {
+async function loadTeamsData() {
+    sessionStorage.setItem("scrollPosition", window.scrollY);
+
     APIEndpoint = await getBackendAddress();
 
     const teamsReponse = await fetch(`${APIEndpoint}/teams/`);
@@ -257,6 +259,11 @@ async function loadUsersData() {
     } catch (error) {
         console.error('Error al cargar los resultados de votaciones:', error);
     }
+
+    if (sessionStorage.getItem("scrollPosition")) {
+        window.scrollTo(0, sessionStorage.getItem("scrollPosition"));
+        sessionStorage.removeItem("scrollPosition");
+    }
 }
 
 async function handleDeleteMasai(masaiName, masaiId) {
@@ -272,7 +279,7 @@ async function handleDeleteMasai(masaiName, masaiId) {
         }); 
     
         if (deleteResponse.ok) {
-            await loadUsersData();
+            await loadTeamsData();
         }
     }
 }
@@ -313,7 +320,7 @@ async function setUserTeam(valor) {
     });
 
     if (response.ok) {
-        await loadUsersData();
+        await loadTeamsData();
         cerrarPopup("teamPopup");        
     } else {
         console.error('Error al actualizar al usuario:', response.error);

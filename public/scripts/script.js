@@ -86,6 +86,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 // Función para mostrar la lista de usuarios en la tabla
 async function displayUserList(users) {
+    sessionStorage.setItem("scrollPosition", window.scrollY);
+
     const userListElement = document.getElementById('userList');
     userListElement.innerHTML = ''; // Limpiar la lista existente
 
@@ -118,7 +120,8 @@ async function displayUserList(users) {
                     if (user.voteId) {
                         deleteVote(user.voteId);
                     } else {                    
-                        document.querySelector("#votingUser").innerText = user._id;                    
+                        document.querySelector("#votingUser").innerText = user._id;
+                        document.querySelector("#votingUserName").innerText = user.name;
                         await showVotingDialog();
                     }
                 } catch (error) {
@@ -134,6 +137,11 @@ async function displayUserList(users) {
 
         userListElement.appendChild(row);
     });
+
+    if (sessionStorage.getItem("scrollPosition")) {
+        window.scrollTo(0, sessionStorage.getItem("scrollPosition"));
+        sessionStorage.removeItem("scrollPosition");
+    }
 }
 
 async function showVotingDialog() {

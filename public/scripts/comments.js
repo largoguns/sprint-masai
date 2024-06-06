@@ -27,6 +27,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 async function loadCommentsData() {
+    sessionStorage.setItem("scrollPosition", window.scrollY);
     APIEndpoint = await getBackendAddress();
 
     const commentsList = document.getElementById('commentsList');
@@ -58,6 +59,11 @@ async function loadCommentsData() {
         }
     } catch (error) {
         console.error('Error al cargar los equipos:', error);
+    }
+
+    if (sessionStorage.getItem("scrollPosition")) {
+        window.scrollTo(0, sessionStorage.getItem("scrollPosition"));
+        sessionStorage.removeItem("scrollPosition");
     }
 }
 
