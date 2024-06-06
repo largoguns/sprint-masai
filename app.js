@@ -106,7 +106,7 @@ app.listen(port, () => {
 
 async function getUsersData() {
   try {
-      const response = await axios.get('http://localhost:3000/api/users');
+      const response = await axios.get(`${endpoint}/api/users`);
       return response.data;
   } catch (error) {
       console.error('Error getting users data:', error);
