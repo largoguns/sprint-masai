@@ -186,6 +186,8 @@ function getJobEmoji(job) {
             return "💼💻";
         case "DIRECTOR/A DE MARKETING DE PRODUCTO":
             return "💼📈";
+        case "PRODUCT MARKETING MANAGER":
+            return "📈";
         case "DIRECTOR/A GENERAL":
             return "💼";
         case "PRODUCT OWNER":
