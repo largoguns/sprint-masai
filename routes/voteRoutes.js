@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const Datastore = require('nedb');
 const fetch = require('node-fetch');
+const { log, error } = require('../logconsole'); // Importa las funciones
+
 
 const db = new Datastore({ filename: 'data/votes.db', autoload: true });
 
@@ -67,8 +69,8 @@ router.post('/', async (req, res) => {
 
         const userVotesCount = await countVotesByUser(newVote.voterId);
 
-        console.log("votingLimit", responseData.votingLimit);
-        console.log("userVotesCount", userVotesCount);
+        log("votingLimit", responseData.votingLimit);
+        log("userVotesCount", userVotesCount);
 
         if (votingStatusResponse.votingStatus == "closed") {
             throw new Error("votingClosed");

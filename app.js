@@ -1,5 +1,4 @@
 // backend/server.js
-
 const express = require("express");
 const Datastore = require("nedb");
 const bodyParser = require("body-parser");
@@ -16,6 +15,7 @@ const configRoutes = require("./routes/configRoutes");
 const teamsRoutes = require("./routes/teamsRoutes");
 const commentsRoutes = require("./routes/commentsRoutes");
 
+const { log, error } = require('./logconsole');
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -28,6 +28,8 @@ app.use(express.static("public"));
 
 app.use(cors());
 app.use(express.json());
+
+
 
 
 let ipAddress = "";
@@ -43,7 +45,7 @@ Object.keys(interfaces).forEach((key) => {
 
 //const endpoint = `http://${ipAddress}:${port}`; // URL del endpoint
 const endpoint = `http://localhost:${port}`; // URL del endpoint
-console.log("HOLA QUE TAL!");
+log("HOLA QUE TAL!");
 //const endpoint = "https://sprint-masai.onrender.com";
 endpointConfig = { endpoint };
 
@@ -93,7 +95,7 @@ app.get("/endpoint.config", (req, res) => {
   // Leer el archivo de configuración y enviarlo como respuesta
   fs.readFile("endpoint.config", "utf8", (err, data) => {
     if (err) {
-      console.error("Error al leer el archivo de configuración:", err);
+      error("Error al leer el archivo de configuración:", err);
       return res.status(500).send("Error interno del servidor");
     }
     res.json(JSON.parse(data));
@@ -101,7 +103,7 @@ app.get("/endpoint.config", (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Servidor Masáis corriendo en ${port}`);
+  log(`Servidor Masáis corriendo en ${port}`);
 });
 
 async function getUsersData() {
@@ -109,7 +111,7 @@ async function getUsersData() {
       const response = await axios.get(`${endpoint}/api/users`);
       return response.data;
   } catch (error) {
-      console.error('Error getting users data:', error);
+      error('Error getting users data:', error);
       return [];
   }
 }
@@ -157,16 +159,18 @@ async function sendTeamsMessage(user) {
         ]
     };
 
-      console.log('Enviando mensaje a Teams:', JSON.stringify(message));
+      log('Enviando mensaje a Teams:', JSON.stringify(message));
       await axios.post('https://blevraultgroup.webhook.office.com/webhookb2/33eeba4c-e031-4e60-9ccf-e083d7523cd3@8c9f5440-d6bf-4e89-a448-9e3e3a224ba3/IncomingWebhook/0b5678f32339467db41e8f25a9b5287d/be94e17c-24d5-409b-b7b2-18323c584f80', message);
-      console.log('Mensaje enviado a Teams:');
+      log('Mensaje enviado a Teams:');
   } catch (error) {
-      console.error('Error al enviar el mensaje a Teams:', error);
+      error('Error al enviar el mensaje a Teams:', error);
   }
 }
 
 async function birthdayCheck() {
   const users = await getUsersData();
+
+  log("Got users", users);
 
   users.forEach(user => {
       if (isBirthdayToday(user.birthday)) {
@@ -176,13 +180,15 @@ async function birthdayCheck() {
 }
 
 cron.schedule('00 07 00 * * *', async () => {
-  console.log('Executing cron task...');
+  log('Executing birthday cron task...');
   
   await birthdayCheck();
 }, {
   scheduled: true,
   timezone: "Europe/Madrid"
 });
+
+birthdayCheck();
 
 // app.listen(process.env.PORT, () => {
 //     console.log(`Servidor Masáis corriendo en ${endpoint}`);

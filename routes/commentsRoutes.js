@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Datastore = require('nedb');
+const { log, error } = require('../logconsole'); // Importa las funciones
 
 const db = new Datastore({ filename: 'data/comment.db', autoload: true });
 

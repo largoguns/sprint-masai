@@ -2,8 +2,11 @@ const express = require('express');
 const router = express.Router();
 const Datastore = require('nedb');
 const axios = require('axios');
-const schedule = require('node-schedule');
+const cron = require('node-cron');
+
 const { v4: uuidv4 } = require('uuid');
+const { log, error } = require('../logconsole'); // Importa las funciones
+const scheduledJobs = {};
 
 // Crear la base de datos NeDB
 const db = new Datastore({ filename: 'data/config.db', autoload: true });
@@ -11,15 +14,15 @@ const db = new Datastore({ filename: 'data/config.db', autoload: true });
 // Verificar y añadir valor por defecto al arrancar
 db.find({}, (err, docs) => {
     if (err) {
-        console.error('Error al buscar en la base de datos:', err);
+        error('Error al buscar en la base de datos:', err);
     } else {
         if (docs.length === 0) {
             // No hay datos, agregar valor por defecto
             db.insert({ votingLimit: 1, votingStatus: "closed" }, (err, newDoc) => {
                 if (err) {
-                    console.error('Error al agregar valor por defecto:', err);
+                    error('Error al agregar valor por defecto:', err);
                 } else {
-                    console.log('Valor por defecto agregado:', newDoc);
+                    log('Valor por defecto agregado:', newDoc);
                 }
             });
         }
@@ -87,22 +90,28 @@ router.put('/votingStatus', async (req, res) => {
     });
 });
 
-router.post('/programVotingEnd', async(req, res) => {
-    const { date, time} = req.body;
-    const cronExpresion = `${date} ${time}`;
+router.post('/programVotingEnd', async (req, res) => {
+    const { date, time } = req.body;
+
+    // Crear una expresión cron compatible
+    const [year, month, day] = date.split('-');
+    const [hour, minute] = time.split(':');
+    const cronExpression = `${minute} ${hour} ${day} ${month} *`;
 
     const id = uuidv4();
-    schedule.scheduleJob(id, cronExpresion, () => {    
+    const task = cron.schedule(cronExpression, () => {
         db.update({}, { $set: { votingStatus: "closed", taskID: null, votingLimit: null } }, {}, async (err, numReplaced) => {
             if (err) {
-                console.log("programVotingEnd - Error", err)
+                error("programVotingEnd - Error", err);
             } else {
-                console.log("Periodo de votación finalizado");
+                log("Periodo de votación finalizado");
             }
         });
 
-        console.log('Periodo de votación finalizado:', new Date());        
+        log('Periodo de votación finalizado:', new Date());
     });
+
+    scheduledJobs[id] = task;
 
     db.update({}, { $set: { taskID: id, votingLimit: `${date} ${time}` } }, {}, async (err, numReplaced) => {
         if (err) {
@@ -115,19 +124,20 @@ router.post('/programVotingEnd', async(req, res) => {
     res.send('Fecha límite de votación actualizada');
 });
 
-router.delete('/programVotingEnd', async(req, res) => {
-
+router.delete('/programVotingEnd', async (req, res) => {
     db.findOne({}, (err, config) => {
         if (err) {
             res.status(500).json({ error: err });
         } else {
+            const taskID = config.taskID;
+            const task = scheduledJobs[taskID];
 
-            const tareaProgramada = schedule.scheduledJobs[config.taskID];
-            if (tareaProgramada) {
-              tareaProgramada.cancel();
-              console.log('Tarea programada cancelada:', config.taskID);
+            if (task) {
+                task.stop();
+                delete scheduledJobs[taskID];
+                log('Tarea programada cancelada:', taskID);
             } else {
-              console.warn('Tarea programada no encontrada:', config.taskID);
+                console.warn('Tarea programada no encontrada:', taskID);
             }
 
             db.update({}, { $set: { taskID: null, votingLimit: null } }, {}, async (err, numReplaced) => {
@@ -136,13 +146,11 @@ router.delete('/programVotingEnd', async(req, res) => {
                 } else {
                     res.json();
                 }
-            });       
-
+            });
         }
     });
-    
+
     res.send('Fecha límite de votación actualizada');
 });
-
 
 module.exports = router;
